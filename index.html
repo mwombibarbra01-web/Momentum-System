@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Momentum System</title>
+<meta name="description" content="A weekly operating system: find the task, build the want to do it, then execute it with fundamentals, full effort and focus.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15120d" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Momentum">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout concept: a top-to-bottom ladder of 8 "levels"; a weekly routine sits at the top,
+     you pick the task you're facing, and the flow below walks that one task down the ladder. */
+  :root{
+    --bg:#f3f1ec; --surface:#ffffff; --surface-2:#f7f4ee; --fg:#1b1813; --muted:#6c655b;
+    --line:#e4ded4; --line-strong:#d2cabd;
+    --accent:#d9591a;        /* momentum (basketball burnt-orange) */
+    --accent-soft:#fbe7d8;
+    --focus:#0f7d77;         /* focus / slow thinking (calm teal) */
+    --focus-soft:#d8efed;
+    --good:#2f7d4f; --warn:#b7791f;
+    --shadow:0 1px 2px rgba(27,24,19,.06),0 8px 24px rgba(27,24,19,.06);
+    --radius:16px;
+    --f-display:"Bricolage Grotesque",-apple-system,Segoe UI,Roboto,sans-serif;
+    --f-body:"IBM Plex Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    color-scheme:light;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#15120d; --surface:#201b15; --surface-2:#2a241c; --fg:#f2ede4; --muted:#a79e90;
+    --line:#352e24; --line-strong:#473d30;
+    --accent:#ff7a3d; --accent-soft:#3a2416;
+    --focus:#33bdb2; --focus-soft:#13302e;
+    --good:#58c07e; --warn:#e0a94a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#15120d; --surface:#201b15; --surface-2:#2a241c; --fg:#f2ede4; --muted:#a79e90;
+    --line:#352e24; --line-strong:#473d30;
+    --accent:#ff7a3d; --accent-soft:#3a2416;
+    --focus:#33bdb2; --focus-soft:#13302e;
+    --good:#58c07e; --warn:#e0a94a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+  body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;
+    padding-left:max(18px,env(safe-area-inset-left,0px));
+    padding-right:max(18px,env(safe-area-inset-right,0px));
+    padding-block:28px 72px}
+
+  h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0;letter-spacing:-.01em}
+  .eyebrow{font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--muted)}
+
+  header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
+  header h1{font-size:clamp(28px,6vw,42px);line-height:1.02}
+  header p{color:var(--muted);margin:.5rem 0 0;max-width:46ch}
+  .hbtns{display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
+  .theme-btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);
+    border-radius:999px;padding:8px 14px;font-family:var(--f-mono);font-size:12px;cursor:pointer}
+  .theme-btn:hover{border-color:var(--accent)}
+  #installBtn{border:none;background:var(--accent);color:#fff}
+
+  .now{background:var(--accent);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:26px;
+    box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .now .dot{width:10px;height:10px;border-radius:50%;background:#fff;flex:0 0 auto;
+    animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%{box-shadow:0 0 0 12px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  @media (prefers-reduced-motion:reduce){.now .dot{animation:none}}
+  .now .lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+  .now .task{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.1}
+  .now .time{font-family:var(--f-mono);font-size:12px;opacity:.9}
+  .now.idle{background:var(--surface);color:var(--fg);border:1px dashed var(--line-strong)}
+  .now.idle .dot{background:var(--muted);animation:none}
+
+  .level{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:16px;box-shadow:var(--shadow);scroll-margin-top:16px}
+  .level-head{display:flex;gap:14px;align-items:flex-start}
+  .num{flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:var(--surface-2);
+    border:1px solid var(--line-strong);display:grid;place-items:center;
+    font-family:var(--f-display);font-weight:700;font-size:18px;color:var(--accent)}
+  .level.focuslvl .num{color:var(--focus)}
+  .level-head h2{font-size:19px}
+  .level-head .sub{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .body{margin-top:14px}
+
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .pill{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted)}
+  .pill.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .pill.focus.on{background:var(--focus-soft);color:var(--focus)}
+
+  input[type=text],input[type=time],textarea,select{
+    width:100%;font-family:var(--f-body);font-size:14px;color:var(--fg);background:var(--surface-2);
+    border:1px solid var(--line-strong);border-radius:10px;padding:9px 11px}
+  textarea{resize:vertical;min-height:74px;line-height:1.45}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  label.fld{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 5px}
+
+  button.act{font-family:var(--f-body);font-weight:600;font-size:13.5px;cursor:pointer;border-radius:10px;
+    border:1px solid var(--line-strong);background:var(--surface-2);color:var(--fg);padding:8px 13px}
+  button.act:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#fff;border-color:transparent}
+  button.primary:hover{filter:brightness(1.05)}
+  button.ghost{background:transparent;border-color:var(--line);color:var(--muted)}
+  button.tiny{padding:5px 9px;font-size:12px}
+
+  .routine-scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    text-align:left;padding:6px 8px;font-weight:500}
+  td{padding:6px 8px;vertical-align:middle;border-top:1px solid var(--line)}
+  tr.rownow td{background:var(--accent-soft)}
+  td .nm{width:100%}
+  td.pick{white-space:nowrap}
+  .row-sel{outline:2px solid var(--focus)}
+
+  .gate{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .gate button{flex:1 1 160px;min-width:140px;text-align:left;padding:13px 15px;border-radius:12px;
+    border:1.5px solid var(--line-strong);background:var(--surface-2);cursor:pointer;color:var(--fg)}
+  .gate button b{font-family:var(--f-display);font-size:15px;display:block}
+  .gate button span{font-size:12.5px;color:var(--muted)}
+  .gate button.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .gate button.sel span{color:var(--fg)}
+  .verdict{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--surface-2);
+    border-left:4px solid var(--accent);font-size:14px}
+  .verdict.focus{border-left-color:var(--focus)}
+  .dim{opacity:.5}
+
+  .lst{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .lst .item{display:flex;gap:8px;align-items:center}
+  .lst .item .step{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--surface-2);
+    border:1px solid var(--line-strong);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+  .lst .item input{flex:1 1 auto;min-width:0}
+  .lst .item button{flex:0 0 auto}
+
+  .quote{border-left:4px solid var(--accent);padding:4px 0 4px 16px;margin:14px 0;font-size:15px;line-height:1.5}
+  .quote .by{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+
+  .dial-wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:6px 0 14px}
+  .dial-val{font-family:var(--f-display);font-size:40px;font-weight:700;color:var(--accent);min-width:110px}
+  .dial-val small{font-size:14px;color:var(--muted);font-family:var(--f-body)}
+  input[type=range]{flex:1 1 200px;accent-color:var(--accent);height:30px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr}}
+
+  .tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  @media (max-width:560px){.tools{grid-template-columns:1fr}}
+  .tool{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+  .tool input{width:18px;height:18px;margin-top:2px;accent-color:var(--focus);flex:0 0 auto}
+  .tool .t-name{font-weight:600;font-size:14px}
+  .tool .t-desc{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .tool.on{border-color:var(--focus);background:var(--focus-soft)}
+
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  .pickprompt{background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--radius);
+    padding:22px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center;font-family:var(--f-mono)}
+  .seedwarn{font-size:12px;color:var(--warn);margin-top:6px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Weekly operating system</div>
+      <h1>The Momentum System</h1>
+      <p>Start with what you're meant to do now. If you don't feel like it, build the want. Then do it like you mean it.</p>
+    </div>
+    <div class="hbtns">
+      <button class="theme-btn" id="themeBtn">Theme</button>
+      <button class="theme-btn" id="installBtn" hidden>Install app</button>
+    </div>
+  </header>
+
+  <div id="nowBanner"></div>
+
+  <section class="level" id="lvl1">
+    <div class="level-head">
+      <div class="num">1</div>
+      <div>
+        <h2>What am I doing now? <span class="pill">Routine / Schedule</span></h2>
+        <div class="sub">Your week, written down. The highlighted row is what this exact moment calls for. Edit freely — add your real tasks and times.</div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="routine-scroll">
+        <table id="routineTable">
+          <thead><tr><th>Day</th><th>Start</th><th>End</th><th>Task</th><th></th><th></th></tr></thead>
+          <tbody id="routineBody"></tbody>
+        </table>
+      </div>
+      <div class="seedwarn" id="seedWarn">↑ These are example rows to show you how it works. Edit or delete them and put in your real week.</div>
+      <div style="margin-top:12px"><button class="act primary" id="addRow">+ Add a task</button></div>
+    </div>
+  </section>
+
+  <div id="flow"></div>
+
+  <footer>Built around Michael Jordan's rules: fundamentals never change, full effort always. Saved only on this device.</footer>
+</div>
+
+<script>
+"use strict";
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const KEY="momentum-system-v1";
+
+const FOCUS_TOOLS=[
+  {id:"timer",name:"One timer (Pomodoro)",desc:"Set 25 min. Nothing else exists until it rings. Then a 5 min break."},
+  {id:"phone",name:"Phone in another room",desc:"Not face-down on the desk — gone. Or switch on Do-Not-Disturb (Focus mode)."},
+  {id:"onetab",name:"One tab / one window",desc:"Close every tab and app that isn't this task. Full-screen the one you need."},
+  {id:"blocker",name:"A blocker app",desc:"Forest, Freedom or Cold Turkey locks out the sites that pull you away."},
+  {id:"noise",name:"Steady sound",desc:"Brown noise, rain, or one instrumental playlist. No lyrics, no new songs to pick."},
+  {id:"card",name:"The one-action card",desc:"Write the single next move on paper. When you drift, your eyes land back on it."}
+];
+
+function blankFlow(){return{want:null,kaizen:[""],survive:"",mastery:null,blueprint:"",
+  fundamentals:[""],effort100:"",effort110:"",effortLevel:70,focusTools:{},slow:""}}
+
+let state=load();
+
+function load(){
+  let s=null;
+  try{const raw=localStorage.getItem(KEY); if(raw) s=JSON.parse(raw);}catch(e){}
+  if(!s||!s.tasks){
+    s={seeded:true,currentTaskId:null,theme:null,tasks:[
+      {id:id(),day:"Mon",start:"09:00",end:"11:00",name:"Deep work block (example)"},
+      {id:id(),day:"Mon",start:"18:00",end:"19:00",name:"Gym / training (example)"},
+      {id:id(),day:"Wed",start:"14:00",end:"15:30",name:"Study session (example)"}
+    ],flows:{}};
+  }
+  if(!s.flows) s.flows={};
+  return s;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function id(){return"t"+Math.random().toString(36).slice(2,9)}
+function flowFor(tid){if(!state.flows[tid])state.flows[tid]=blankFlow();return state.flows[tid]}
+function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function applyTheme(){if(state.theme)document.documentElement.setAttribute("data-theme",state.theme);
+  else document.documentElement.removeAttribute("data-theme");}
+document.getElementById("themeBtn").onclick=()=>{
+  const cur=state.theme|| (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  state.theme=cur==="dark"?"light":"dark";applyTheme();save();
+};
+applyTheme();
+
+function nowInfo(){
+  const d=new Date();const wd=(d.getDay()+6)%7;
+  const mins=d.getHours()*60+d.getMinutes();
+  for(const t of state.tasks){
+    if(t.day!==DAYS[wd]) continue;
+    const [sh,sm]=(t.start||"0:0").split(":").map(Number);
+    const [eh,em]=(t.end||"0:0").split(":").map(Number);
+    const s=sh*60+sm,e=eh*60+em;
+    if(mins>=s&&mins<e) return t;
+  }
+  return null;
+}
+function renderNow(){
+  const el=document.getElementById("nowBanner");
+  const t=nowInfo();
+  if(t){
+    el.className="now";
+    el.innerHTML=`<span class="dot"></span><div><div class="lbl">Right now you're meant to be</div>
+      <div class="task">${esc(t.name)}</div><div class="time">${t.day} · ${esc(t.start)}–${esc(t.end)}</div></div>
+      <button class="act" id="nowOpen" style="margin-left:auto;background:#fff;color:var(--accent);border:none">Open this task ↓</button>`;
+    document.getElementById("nowOpen").onclick=()=>selectTask(t.id);
+  }else{
+    el.className="now idle";
+    el.innerHTML=`<span class="dot"></span><div><div class="lbl" style="opacity:1">Nothing scheduled for right now</div>
+      <div class="small">Pick any task from the routine below to run it through the system.</div></div>`;
+  }
+}
+
+function renderRoutine(){
+  const tb=document.getElementById("routineBody");
+  const now=nowInfo();
+  tb.innerHTML="";
+  state.tasks.forEach(t=>{
+    const tr=document.createElement("tr");
+    if(now&&now.id===t.id) tr.className="rownow";
+    if(state.currentTaskId===t.id) tr.classList.add("row-sel");
+    const dayOpts=DAYS.map(d=>`<option ${d===t.day?"selected":""}>${d}</option>`).join("");
+    tr.innerHTML=`
+      <td><select data-f="day" style="width:72px">${dayOpts}</select></td>
+      <td><input type="time" data-f="start" value="${t.start}" style="width:110px"></td>
+      <td><input type="time" data-f="end" value="${t.end}" style="width:110px"></td>
+      <td><input type="text" class="nm" data-f="name" value="${esc(t.name)}"></td>
+      <td class="pick"><button class="act tiny primary">Open →</button></td>
+      <td><button class="act tiny ghost" title="Delete">✕</button></td>`;
+    const [daySel,startI,endI,nameI]=tr.querySelectorAll("[data-f]");
+    [daySel,startI,endI,nameI].forEach(inp=>{
+      inp.addEventListener("input",()=>{t[inp.dataset.f]=inp.value;save();renderNow();});
+    });
+    tr.querySelector(".primary").onclick=()=>selectTask(t.id);
+    tr.querySelector(".ghost").onclick=()=>{
+      state.tasks=state.tasks.filter(x=>x.id!==t.id);
+      if(state.currentTaskId===t.id){state.currentTaskId=null;renderFlow();}
+      delete state.flows[t.id];save();renderRoutine();renderNow();
+    };
+    tb.appendChild(tr);
+  });
+  document.getElementById("seedWarn").style.display=state.seeded?"":"none";
+}
+document.getElementById("addRow").onclick=()=>{
+  state.seeded=false;
+  state.tasks.push({id:id(),day:DAYS[(new Date().getDay()+6)%7],start:"09:00",end:"10:00",name:""});
+  save();renderRoutine();
+};
+
+function selectTask(tid){
+  state.currentTaskId=tid;save();renderRoutine();renderFlow();
+  document.getElementById("flow").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function renderFlow(){
+  const host=document.getElementById("flow");
+  const tid=state.currentTaskId;
+  if(!tid||!state.tasks.find(t=>t.id===tid)){
+    host.innerHTML=`<div class="pickprompt"><strong>Pick the task you're facing.</strong><br>
+      Hit “Open →” on any row above (or the current one up top). The 8-step flow opens here for that task, and each task remembers its own answers.</div>`;
+    return;
+  }
+  const t=state.tasks.find(x=>x.id===tid);
+  const f=flowFor(tid);
+  const wantNo=f.want==="no", wantYes=f.want==="yes";
+  const bestYes=f.mastery==="yes";
+
+  host.innerHTML=`
+  <div class="level" style="border-color:var(--accent)">
+    <div class="eyebrow">Running the system for</div>
+    <h2 style="font-size:24px;margin-top:4px">${esc(t.name||"(unnamed task)")}</h2>
+    <div class="muted small">${t.day} · ${esc(t.start)}–${esc(t.end)} — answers below are saved just for this task.</div>
+  </div>
+
+  <section class="level">
+    <div class="level-head"><div class="num">2</div><div>
+      <h2>Do I actually want to do it right now? <span class="pill">The want-check</span></h2>
+      <div class="sub">Be honest. Most of the time the honest answer is no — and that's fine, it just tells you which path you're on.</div>
+    </div></div>
+    <div class="body">
+      <div class="gate">
+        <button data-want="yes" class="${wantYes?'sel':''}"><b>Yes, I want to</b><span>Good — no momentum tools needed. Skip straight to Level 4.</span></button>
+        <button data-want="no" class="${wantNo?'sel':''}"><b>No, not really</b><span>Normal. Go to Level 3 and build the want first.</span></button>
+      </div>
+      ${f.want?`<div class="verdict">${wantYes
+        ? "You're ready. Jump down to <b>Level 4</b> — don't waste the momentum."
+        : "Perfectly normal — we almost never <i>feel</i> like starting. Use the two tools below to get moving."}</div>`:""}
+    </div>
+  </section>
+
+  <section class="level ${wantYes?'dim':''}">
+    <div class="level-head"><div class="num">3</div><div>
+      <h2>Build the want <span class="pill ${wantNo?'on':''}">Momentum tools</span></h2>
+      <div class="sub">Two reasons we stall: the task feels too big, and we quietly expect to fail it. One tool for each.</div>
+    </div></div>
+    <div class="body">
+      <h3 style="font-size:15px">Tool 1 — Break it tiny <span class="pill">Kaizen · small continuous steps</span></h3>
+      <p class="small muted" style="margin:4px 0 0">Kaizen means tiny improvements, one on top of another. Split the task into steps so small the first one feels almost silly to skip. Edit them freely.</p>
+      <div class="lst" id="kaizenList"></div>
+      <button class="act tiny" id="addKaizen">+ Add a smaller step</button>
+
+      <div class="divider"></div>
+
+      <h3 style="font-size:15px">Tool 2 — Swim to survive <span class="pill">Reframe the fear of failing</span></h3>
+      <div class="quote">“Even if it's my first time swimming, I don't walk in thinking I'm going to drown. I walk in thinking I can at least swim enough to survive.”<span class="by">— the Michael Jordan reframe</span></div>
+      <p class="small muted" style="margin:0 0 6px">You're not here to win it first try. You're here to survive the lap. Write the “just survive” version of this task:</p>
+      <textarea id="survive" placeholder="e.g. I don't have to write a perfect chapter — I just have to get one rough page down and live.">${esc(f.survive)}</textarea>
+    </div>
+  </section>
+
+  <section class="level">
+    <div class="level-head"><div class="num">4</div><div>
+      <h2>Best, or just done? <span class="pill">Mastery choice</span></h2>
+      <div class="sub">Both are valid. But if you want to be the <i>best</i> at this, the next levels aren't optional.</div>
+    </div></div>
+    <div class="body">
+      <div class="gate">
+        <button data-best="yes" class="${bestYes?'sel':''}"><b>I want to be the best</b><span>Fundamentals + blueprint + 110%. No skipping.</span></button>
+        <button data-best="no" class="${f.mastery==='no'?'sel':''}"><b>Just get it done</b><span>Fine. Still see the finished picture and run one focus block.</span></button>
+      </div>
+      ${f.mastery?`<div class="verdict">${bestYes
+        ? "Then you can't skip the basics. Michael Jordan: <b>the fundamentals never change — only our attention to them does.</b> Fill in Levels 5–8."
+        : "Good enough is a real choice. Still do Level 5 (see the finished thing) and one block of Level 8 — it makes “done” painless."}</div>`:""}
+    </div>
+  </section>
+
+  <section class="level focuslvl">
+    <div class="level-head"><div class="num">5</div><div>
+      <h2>See the finished thing first <span class="pill focus">The blueprint · mental model</span></h2>
+      <div class="sub">Your rule: before any detail, build a picture of the final result. Describe what “done and good” looks like — so every detail later has something to aim at.</div>
+    </div></div>
+    <div class="body">
+      <textarea id="blueprint" placeholder="When this is finished and done well, what exactly exists? What does it look, read or feel like? Paint it before you touch the details.">${esc(f.blueprint)}</textarea>
+    </div>
+  </section>
+
+  <section class="level ${bestYes?'':'dim'}">
+    <div class="level-head"><div class="num">6</div><div>
+      <h2>The basics for this task <span class="pill ${bestYes?'on':''}">Fundamentals</span></h2>
+      <div class="sub">The handful of basics that decide the outcome every single time. List them here for this task, and keep editing as you learn which ones really matter.</div>
+    </div></div>
+    <div class="body">
+      <div class="lst" id="fundList"></div>
+      <button class="act tiny" id="addFund">+ Add a fundamental</button>
+    </div>
+  </section>
+
+  <section class="level">
+    <div class="level-head"><div class="num">7</div><div>
+      <h2>Give it 110% <span class="pill">Full effort</span></h2>
+      <div class="sub">Michael Jordan: put in less, expect average out. 110% isn't a mood — it's a number you define before you start.</div>
+    </div></div>
+    <div class="body">
+      <div class="grid2">
+        <div><label class="fld">What 100% (the normal, expected job) looks like</label>
+          <textarea id="effort100" placeholder="e.g. Finish the 3 sets, answer all 10 questions, write the full draft.">${esc(f.effort100)}</textarea></div>
+        <div><label class="fld">The +10% — one deliberate extra, named now</label>
+          <textarea id="effort110" placeholder="e.g. One extra review pass. One harder rep. Explain it out loud to check I truly get it.">${esc(f.effort110)}</textarea></div>
+      </div>
+      <div class="divider"></div>
+      <label class="fld">Dial in your effort before you start</label>
+      <div class="dial-wrap">
+        <div class="dial-val"><span id="dialNum">${f.effortLevel}</span>%<br><small id="dialWord"></small></div>
+        <input type="range" id="effortRange" min="0" max="110" step="10" value="${f.effortLevel}">
+      </div>
+      <p class="small muted" style="margin:0">How to actually hit 110%: (1) write the “+10%” above <i>before</i> you begin, so it's a promise, not an afterthought; (2) make it tiny and specific — one extra, not “try harder”; (3) do the +10% the <b>first moment you want to stop</b>. The extra at the point of quitting is where average turns into best.</p>
+    </div>
+  </section>
+
+  <section class="level focuslvl">
+    <div class="level-head"><div class="num">8</div><div>
+      <h2>Lock in <span class="pill focus">Laser focus + slow thinking · deep work</span></h2>
+      <div class="sub">This is where it all pays off. Remove what steals your attention, then let your best asset — slow, deliberate thinking — do the work.</div>
+    </div></div>
+    <div class="body">
+      <label class="fld">Laser focus — tick the tools you'll set up before you start</label>
+      <div class="tools" id="toolsBox"></div>
+      <div class="divider"></div>
+      <h3 style="font-size:15px">Slow thinking <span class="pill focus">your greatest asset</span></h3>
+      <p class="small muted" style="margin:4px 0 6px">Speed guesses; slow thinking (deliberate, careful reasoning) checks. On this task, where will you force yourself to slow down and think it through instead of rushing?</p>
+      <textarea id="slow" placeholder="e.g. Before I answer, I'll restate the question in my own words and reason it out — no rushing to the first idea.">${esc(f.slow)}</textarea>
+    </div>
+  </section>`;
+
+  host.querySelectorAll("[data-want]").forEach(b=>b.onclick=()=>{f.want=b.dataset.want;save();renderFlow();});
+  host.querySelectorAll("[data-best]").forEach(b=>b.onclick=()=>{f.mastery=b.dataset.best;save();renderFlow();});
+
+  const kl=host.querySelector("#kaizenList");
+  function drawKaizen(){
+    kl.innerHTML="";
+    f.kaizen.forEach((v,i)=>{
+      const row=document.createElement("div");row.className="item";
+      row.innerHTML=`<div class="step">${i+1}</div><input type="text" value="${esc(v)}" placeholder="a step small enough it's silly to skip">
+        <button class="act tiny ghost">✕</button>`;
+      const inp=row.querySelector("input");
+      inp.addEventListener("input",()=>{f.kaizen[i]=inp.value;save();});
+      row.querySelector("button").onclick=()=>{f.kaizen.splice(i,1);if(!f.kaizen.length)f.kaizen=[""];save();drawKaizen();};
+      kl.appendChild(row);
+    });
+  }
+  drawKaizen();
+  host.querySelector("#addKaizen").onclick=()=>{f.kaizen.push("");save();drawKaizen();
+    const ins=kl.querySelectorAll("input");ins[ins.length-1].focus();};
+
+  const fl=host.querySelector("#fundList");
+  function drawFund(){
+    fl.innerHTML="";
+    f.fundamentals.forEach((v,i)=>{
+      const row=document.createElement("div");row.className="item";
+      row.innerHTML=`<div class="step">★</div><input type="text" value="${esc(v)}" placeholder="a basic that decides the result every time">
+        <button class="act tiny ghost">✕</button>`;
+      const inp=row.querySelector("input");
+      inp.addEventListener("input",()=>{f.fundamentals[i]=inp.value;save();});
+      row.querySelector("button").onclick=()=>{f.fundamentals.splice(i,1);if(!f.fundamentals.length)f.fundamentals=[""];save();drawFund();};
+      fl.appendChild(row);
+    });
+  }
+  drawFund();
+  host.querySelector("#addFund").onclick=()=>{f.fundamentals.push("");save();drawFund();
+    const ins=fl.querySelectorAll("input");ins[ins.length-1].focus();};
+
+  const bind=(sel,prop)=>{const el=host.querySelector(sel);if(el)el.addEventListener("input",()=>{f[prop]=el.value;save();});};
+  bind("#survive","survive");bind("#blueprint","blueprint");
+  bind("#effort100","effort100");bind("#effort110","effort110");bind("#slow","slow");
+
+  const range=host.querySelector("#effortRange"),num=host.querySelector("#dialNum"),word=host.querySelector("#dialWord");
+  function dialWord(v){return v<=30?"coasting":v<=60?"half in":v<=90?"solid":v<110?"nearly all":"all in + the extra";}
+  function setDial(){num.textContent=range.value;word.textContent=dialWord(+range.value);
+    num.parentElement.style.color=(+range.value>=110)?"var(--good)":"";}
+  range.addEventListener("input",()=>{f.effortLevel=+range.value;setDial();save();});
+  setDial();
+
+  const tb=host.querySelector("#toolsBox");
+  FOCUS_TOOLS.forEach(tool=>{
+    const on=!!f.focusTools[tool.id];
+    const lab=document.createElement("label");lab.className="tool"+(on?" on":"");
+    lab.innerHTML=`<input type="checkbox" ${on?"checked":""}><div><div class="t-name">${tool.name}</div><div class="t-desc">${tool.desc}</div></div>`;
+    const cb=lab.querySelector("input");
+    cb.addEventListener("change",()=>{f.focusTools[tool.id]=cb.checked;lab.classList.toggle("on",cb.checked);save();});
+    tb.appendChild(lab);
+  });
+}
+
+renderNow();renderRoutine();renderFlow();
+setInterval(renderNow,60000);
+
+/* ---- PWA: install prompt + service worker ---- */
+let deferredPrompt=null;
+const installBtn=document.getElementById("installBtn");
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false;});
+installBtn.onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true;};
+window.addEventListener("appinstalled",()=>{installBtn.hidden=true;});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
+</script>
+</body>
+</html>
